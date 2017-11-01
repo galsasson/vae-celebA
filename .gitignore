@@ -1,0 +1,7 @@
+.DS_Store
+checkpoint
+samples
+data
+env
+vgg16_weights.npz
+*.pyc

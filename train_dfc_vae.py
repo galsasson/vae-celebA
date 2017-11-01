@@ -15,8 +15,8 @@ from utils import *
 from vgg_loss import *
 
 pp = pprint.PrettyPrinter()
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+#os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 '''
 Tensorlayer implementation of DFC-VAE
@@ -34,9 +34,9 @@ flags.DEFINE_integer("output_size", 64, "The size of the output images to produc
 flags.DEFINE_integer("sample_size", 64, "The number of sample images [64]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
-flags.DEFINE_integer("sample_step", 500, "The interval of generating sample. [300]")
-flags.DEFINE_integer("save_step", 800, "The interval of saveing checkpoints. [500]")
-flags.DEFINE_string("dataset", "celebA", "The name of dataset [celebA]")
+flags.DEFINE_integer("sample_step", 200, "The interval of generating sample. [100]")
+flags.DEFINE_integer("save_step", 200, "The interval of saveing checkpoints. [200]")
+flags.DEFINE_string("dataset", "img_align_celeba", "The name of dataset [img_align_celeba]")
 flags.DEFINE_string("test_number", "dfc_vae3", "The number of experiment [test2]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
@@ -145,6 +145,18 @@ def main(_):
     tl.files.assign_params(sess, params, vgg2)
 
 
+    # load checkpoint
+    load_params = tl.files.load_npz(path='checkpoint/dfc-vae3/', name='net_e_55.npz')
+    net1params = load_params[:26]
+    net2params = load_params[:24]
+    np.append(net2params,load_params[26])
+    np.append(net2params,load_params[27])
+    tl.files.assign_params(sess, net1params, net_out1)
+    tl.files.assign_params(sess, net2params, net_out2)
+    load_params = tl.files.load_npz(path='checkpoint/dfc-vae3/', name='net_g_55.npz')
+    tl.files.assign_params(sess, load_params, gen0)
+
+
     # prepare file under checkpoint_dir
     model_dir = "dfc-vae3"
     #  there can be many models under one checkpoine file
@@ -197,6 +209,15 @@ def main(_):
                 iter_counter += 1
                 # save samples
                 if np.mod(iter_counter, FLAGS.sample_step) == 0:
+
+
+                    batch_files[0] = "data/gal-small.jpg"
+                    batch_files[1] = "data/noa-small.jpg"
+                    batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0) \
+                        for batch_file in batch_files]
+                    batch_images = np.array(batch).astype(np.float32)
+
+
                     # generate and visualize generated images
                     img1, img2 = sess.run([gen2.outputs, gen3.outputs], feed_dict={input_imgs: batch_images})
                     save_images(img1, [8, 8],
@@ -207,7 +228,7 @@ def main(_):
                                 './{}/train_{:02d}_{:04d}_random.png'.format(samples_1, epoch, idx))
 
                     # save input image for comparison
-                    save_images(batch_images,[8, 8],'./{}/input.png'.format(samples_1))
+                    save_images(batch_images,[8, 8],'./{}/train_{:02d}_{:04d}_input.png'.format(samples_1,epoch,idx))
                     print("[Sample] sample generated!!!")
                     sys.stdout.flush()
 
@@ -224,8 +245,15 @@ def main(_):
 
                     # params of two branches
                     net_out_params = net_out1.all_params + net_out2.all_params
+                    print "Params = "
+                    print net_out_params
+                    print "-------------------"
                     # remove repeat params
                     net_out_params = tl.layers.list_remove_repeat(net_out_params)
+                    print "Params remove repeat = "
+                    print net_out_params
+                    print "-------------------"
+
                     tl.files.save_npz(net_out_params, name=net_e_name, sess=sess)
                     tl.files.save_npz(gen0.all_params, name=net_g_name, sess=sess)
 

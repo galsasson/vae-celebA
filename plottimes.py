@@ -1,4 +1,3 @@
-#!/home/gal/google/vae-celebA/env2/bin/python
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np

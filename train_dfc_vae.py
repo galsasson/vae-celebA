@@ -44,6 +44,7 @@ flags.DEFINE_boolean("is_train", False, "True for training, False for testing [F
 flags.DEFINE_boolean("is_crop", True, "True for training, False for testing [False]")
 
 flags.DEFINE_string("load_model","no", "Provide the name of the model to load [-]")
+flags.DEFINE_boolean("myrecon", False, "User custom images for samples [False]")
 FLAGS = flags.FLAGS
 
 
@@ -200,7 +201,7 @@ def main(_):
                 p, p1, p2, p3, kl, sse, errE, _ = sess.run([p_loss,p1_loss,p2_loss,p3_loss,KL_loss,SSE_loss,VAE_loss,vae_optim], feed_dict={input_imgs: batch_images, lr_vae:vae_current_lr})
 
 
-                print("Epoch: [%2d/%2d] [%4d/%4d] time: %4.4f, vae_loss:%8d, kl_loss:%8d, sse_loss:%8d, p1_loss:%8d, p2_loss:%8d, p3_loss:%8d, p_loss:%8d" \
+                print("Epoch: [%2d/%2d] [%4d/%4d] time: %4.4f, vae_loss:%.2f, kl_loss:%.2f, sse_loss:%.2f, p1_loss:%.2f, p2_loss:%.2f, p3_loss:%.2f, p_loss:%.2f" \
                         % (epoch, FLAGS.epoch, idx, batch_idxs,
                             time.time() - start_time, errE, kl, sse, p1, p2, p3, p))
                 sys.stdout.flush()
@@ -209,26 +210,28 @@ def main(_):
                 # save samples
                 if np.mod(iter_counter, FLAGS.sample_step) == 0:
 
-
-                    batch_files[0] = "data/gal-small.jpg"
-                    batch_files[1] = "data/noa-small.jpg"
-                    batch_files[2] = "data/gal-small2.jpg"
-                    batch_files[3] = "data/noa-small2.jpg"
-                    batch_files[4] = "data/gal-small3.jpg"
-                    batch_files[5] = "data/gal-small4.jpg"
-                    batch_files[6] = "data/gal-small5.jpg"
-                    batch_files[7] = "data/gal-small6.jpg"
-                    batch_files[8] = "data/gal-small7.jpg"
-                    batch_files[9] = "data/gal-small8.jpg"
-                    batch_files[10] = "data/gal-small9.jpg"
-                    batch_files[11] = "data/gal-small10.jpg"
-                    batch_files[12] = "data/tal-small1.jpg"
-                    batch_files[13] = "data/tal-small2.jpg"
-                    batch_files[14] = "data/tal-small3.jpg"
-                    batch_files[15] = "data/tal-small4.jpg"
-                    batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0) \
-                        for batch_file in batch_files]
-                    batch_images = np.array(batch).astype(np.float32)
+                    if FLAGS.myrecon:
+                        batch_files[0] = "data/gal-small.jpg"
+                        batch_files[1] = "data/noa-small.jpg"
+                        batch_files[2] = "data/gal-small2.jpg"
+                        batch_files[3] = "data/noa-small2.jpg"
+                        batch_files[4] = "data/gal-small3.jpg"
+                        batch_files[5] = "data/gal-small4.jpg"
+                        batch_files[6] = "data/gal-small5.jpg"
+                        batch_files[7] = "data/gal-small6.jpg"
+                        batch_files[8] = "data/gal-small7.jpg"
+                        batch_files[9] = "data/gal-small8.jpg"
+                        batch_files[10] = "data/gal-small9.jpg"
+                        batch_files[11] = "data/gal-small10.jpg"
+                        batch_files[12] = "data/tal-small1.jpg"
+                        batch_files[13] = "data/tal-small2.jpg"
+                        batch_files[14] = "data/tal-small3.jpg"
+                        batch_files[15] = "data/tal-small4.jpg"
+                        batch_files[16] = "data/gal-small11.jpg"
+                        batch_files[17] = "data/gal-small12.jpg"
+                        batch_files[18] = "data/gal-small13.jpg"
+                        batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0) for batch_file in batch_files]
+                        batch_images = np.array(batch).astype(np.float32)
 
 
                     # generate and visualize generated images
@@ -247,7 +250,7 @@ def main(_):
 
                     # write times to file
                     with open(timesFilename, "a") as file:
-                        file.write("%8d,%8d,%8d,%8d,%8d,%8d,%8d,%8d\n" % (iter_counter, errE, kl, sse, p1, p2, p3, p))
+                        file.write("%8d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n" % (iter_counter, errE, kl, sse, p1, p2, p3, p))
 
                 # save checkpoint
                 if np.mod(iter_counter, FLAGS.save_step) == 0:

@@ -39,10 +39,6 @@ def main(_):
 
     with tf.device("/gpu:0"):
         ##========================= DEFINE MODEL ===========================##
-        # the input_imgs are input for both encoder and discriminator
-        input_imgs = tf.placeholder(tf.float32,[FLAGS.batch_size, FLAGS.output_size, 
-            FLAGS.output_size, FLAGS.c_dim], name='real_images')
-
         # normal distribution for generator
         z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
 
@@ -65,6 +61,13 @@ def main(_):
         img1 = sess.run(gen0.outputs, feed_dict={})
         save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
         print 'generated image: ./'+FLAGS.output+'.png'
+    else:
+        print 'Generating from file: '+FLAGS.input
+        with open(FLAGS.input, 'r') as f:
+            z = f.read(FLAGS.z_dim*FLAGS.batch_size*4);
+            img1 = sess.run(gen0.outputs, feed_dict={z_p.inputs:z})
+            save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
+            print 'generated image: ./'+FLAGS.output+'.png'
 
 
 if __name__ == '__main__':

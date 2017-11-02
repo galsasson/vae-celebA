@@ -15,6 +15,7 @@ def encoder(input_imgs, is_train = True, reuse = False):
 
     w_init = tf.random_normal_initializer(stddev=0.02)
     gamma_init = tf.random_normal_initializer(1., 0.02)
+    lrelu_alpha = 0.1
 
     with tf.variable_scope("encoder", reuse = reuse):
         tl.layers.set_name_reuse(reuse)
@@ -22,32 +23,32 @@ def encoder(input_imgs, is_train = True, reuse = False):
         net_in = InputLayer(input_imgs, name='en/in') # (b_size,64,64,3)
         net_h0 = Conv2d(net_in, ef_dim, (4, 4), (2, 2), act=None,
                 padding='SAME', W_init=w_init, name='en/h0/conv2d')
-        net_h0 = BatchNormLayer(net_h0, act=lambda x: tl.act.lrelu(x, 0.2),
+        net_h0 = BatchNormLayer(net_h0, act=lambda x: tl.act.lrelu(x, lrelu_alpha),
                 is_train=is_train, gamma_init=gamma_init, name='en/h0/batch_norm')
         # net_h0.outputs._shape = (b_size,32,32,32)
 
         net_h1 = Conv2d(net_h0, ef_dim*2, (4, 4), (2, 2), act=None,
                 padding='SAME', W_init=w_init, name='en/h1/conv2d')
-        net_h1 = BatchNormLayer(net_h1, act=lambda x: tl.act.lrelu(x, 0.2),
+        net_h1 = BatchNormLayer(net_h1, act=lambda x: tl.act.lrelu(x, lrelu_alpha),
                 is_train=is_train, gamma_init=gamma_init, name='en/h1/batch_norm')
         # net_h1.outputs._shape = (b_size,16,16,64)
 
         net_h2 = Conv2d(net_h1, ef_dim*4, (4, 4), (2, 2), act=None,
                 padding='SAME', W_init=w_init, name='en/h2/conv2d')
-        net_h2 = BatchNormLayer(net_h2, act=lambda x: tl.act.lrelu(x, 0.2),
+        net_h2 = BatchNormLayer(net_h2, act=lambda x: tl.act.lrelu(x, lrelu_alpha),
                 is_train=is_train, gamma_init=gamma_init, name='en/h2/batch_norm')
         # net_h2.outputs._shape = (b_size,8,8,128)
 
         net_h3 = Conv2d(net_h2, ef_dim*8, (4, 4), (2, 2), act=None,
                 padding='SAME', W_init=w_init, name='en/h3/conv2d')
-        net_h3 = BatchNormLayer(net_h3, act=lambda x: tl.act.lrelu(x, 0.2),
+        net_h3 = BatchNormLayer(net_h3, act=lambda x: tl.act.lrelu(x, lrelu_alpha),
                 is_train=is_train, gamma_init=gamma_init, name='en/h3/batch_norm')
         # net_h2.outputs._shape = (b_size,4,4,256)
 
 
         net_h35 = Conv2d(net_h3, ef_dim*16, (4, 4), (2, 2), act=None,
                 padding='SAME', W_init=w_init, name='en/h3.5/conv2d')
-        net_h35 = BatchNormLayer(net_h35, act=lambda x: tl.act.lrelu(x, 0.2),
+        net_h35 = BatchNormLayer(net_h35, act=lambda x: tl.act.lrelu(x, lrelu_alpha),
                 is_train=is_train, gamma_init=gamma_init, name='en/h3.5/batch_norm')
 
         # mean of z
@@ -84,6 +85,8 @@ def generator(inputs, is_train = True, reuse = False):
     gf_dim = 32
     c_dim = FLAGS.c_dim # n_color 3
     batch_size = FLAGS.batch_size # 64
+    lrelu_alpha = 0.1
+
 
     w_init = tf.random_normal_initializer(stddev=0.02)
     gamma_init = tf.random_normal_initializer(1., 0.02)
@@ -97,7 +100,7 @@ def generator(inputs, is_train = True, reuse = False):
         # net_h0.outputs._shape = (b_size,256*4*4)
         net_h0 = ReshapeLayer(net_h0, shape=[-1, s16, s16, gf_dim*8], name='g/h0/reshape')
         # net_h0.outputs._shape = (b_size,4,4,256)
-        net_h0 = BatchNormLayer(net_h0, act=lambda x: tl.act.lrelu(x, 0.2), is_train=is_train,
+        net_h0 = BatchNormLayer(net_h0, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h0/batch_norm')
 
         # upsampling
@@ -106,7 +109,7 @@ def generator(inputs, is_train = True, reuse = False):
         net_h1 = Conv2d(net_h1, gf_dim*4, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h1/conv2d')
         # net_h1 = DeConv2d(net_h0, gf_dim*4, (3, 3), out_size=(s4, s4), strides=(2, 2),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h1/decon2d')
-        net_h1 = BatchNormLayer(net_h1, act=lambda x: tl.act.lrelu(x, 0.2), is_train=is_train,
+        net_h1 = BatchNormLayer(net_h1, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h1/batch_norm')
         # net_h1.outputs._shape = (b_size,8,8,128)
 
@@ -115,7 +118,7 @@ def generator(inputs, is_train = True, reuse = False):
         net_h2 = Conv2d(net_h2, gf_dim*2, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h2/conv2d')
         # net_h2 = DeConv2d(net_h1, gf_dim*2, (3, 3), out_size=(s2, s2), strides=(2, 2),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h2/decon2d')
-        net_h2 = BatchNormLayer(net_h2, act=lambda x: tl.act.lrelu(x, 0.2), is_train=is_train,
+        net_h2 = BatchNormLayer(net_h2, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h2/batch_norm')
         # net_h2.outputs._shape = (b_size,16,16,64)
 
@@ -124,7 +127,7 @@ def generator(inputs, is_train = True, reuse = False):
         net_h3 = Conv2d(net_h3, gf_dim, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h3/conv2d')
         # net_h3 = DeConv2d(net_h2, gf_dim//2, (3, 3), out_size=(image_size, image_size), strides=(2, 2),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h3/decon2d')
-        net_h3 = BatchNormLayer(net_h3, act=lambda x: tl.act.lrelu(x, 0.2), is_train=is_train,
+        net_h3 = BatchNormLayer(net_h3, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h3/batch_norm')
         # net_h3.outputs._shape = (b_size,32,32,32)
 
@@ -136,7 +139,7 @@ def generator(inputs, is_train = True, reuse = False):
         net_h4 = Conv2d(net_h4, c_dim, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h4/conv2d')
         # net_h4.outputs._shape = (b_size,64,64,3)
         # net_h4 = Conv2d(net_h3, c_dim, (5,5),(1,1), padding='SAME', W_init=w_init, name='g/h4/conv2d')
-        net_h4 = BatchNormLayer(net_h4, act=lambda x: tl.act.lrelu(x, 0.2), is_train=is_train,
+        net_h4 = BatchNormLayer(net_h4, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h4/batch_norm')
 
 

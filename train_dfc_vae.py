@@ -29,22 +29,21 @@ flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
 flags.DEFINE_integer("train_size", np.inf, "The size of train images [np.inf]")
 flags.DEFINE_integer("batch_size", 32, "The number of batch images [64]")
 flags.DEFINE_integer("image_size", 148, "The size of image to use (will be center cropped) [108]")
-# flags.DEFINE_integer("decoder_output_size", 64, "The size of the output images to produce from decoder[64]")
 flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [64]")
 flags.DEFINE_integer("sample_size", 128, "The number of sample images [64]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
-flags.DEFINE_integer("sample_step", 50, "The interval of generating sample. [1]")
-flags.DEFINE_integer("save_step", 50, "The interval of saveing checkpoints. [200]")
+flags.DEFINE_integer("sample_step", 200, "The interval of generating sample. [100]")
+flags.DEFINE_integer("save_step", 200, "The interval of saveing checkpoints. [200]")
 flags.DEFINE_string("dataset", "img_align_celeba", "The name of dataset [img_align_celeba]")
-flags.DEFINE_string("test_number", "dfc_vae_rec_128", "The number of experiment [dfc_vae_rec]")
+flags.DEFINE_string("test_name", "testname", "The number of experiment [testname]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
+flags.DEFINE_string("times_dir", "times", "Directory name to save times [times]")
 flags.DEFINE_boolean("is_train", False, "True for training, False for testing [False]")
 flags.DEFINE_boolean("is_crop", True, "True for training, False for testing [False]")
-# flags.DEFINE_integer("class_dim", 4, "class number for auxiliary classifier [5]") 
-#flags.DEFINE_boolean("visualize", False, "True for visualizing, False for nothing [False]")
-flags.DEFINE_boolean("load_pretrain",False, "Default to False;If start training on a pretrained net, choose True")
+
+flags.DEFINE_string("load_model","no", "Provide the name of the model to load [-]")
 FLAGS = flags.FLAGS
 
 
@@ -145,24 +144,28 @@ def main(_):
     tl.files.assign_params(sess, params, vgg2)
 
 
-    # load checkpoint
-    #load_params = tl.files.load_npz(path='checkpoint/', name='net_e1.npz')
-    #tl.files.assign_params(sess, load_params, net_out1)
-    #load_params = tl.files.load_npz(path='checkpoint/', name='net_e2.npz')
-    #tl.files.assign_params(sess, load_params, net_out2)
-    #load_params = tl.files.load_npz(path='checkpoint/', name='net_g.npz')
-    #tl.files.assign_params(sess, load_params, gen0)
+    # load checkpoint params
+    if FLAGS.load_model != "no":
+        print 'Loading model: '+str(FLAGS.load_model)
+        load_params = tl.files.load_npz(name=FLAGS.load_model+'_e1.npz')
+        tl.files.assign_params(sess, load_params, net_out1)
+        load_params = tl.files.load_npz(name=FLAGS.load_model+'_e2.npz')
+        tl.files.assign_params(sess, load_params, net_out2)
+        load_params = tl.files.load_npz(name=FLAGS.load_model+'_g.npz')
+        tl.files.assign_params(sess, load_params, gen0)
 
-
-    # prepare file under checkpoint_dir
-    # there can be many models under one checkpoine file
-    save_dir = os.path.join(FLAGS.checkpoint_dir, FLAGS.test_number) #'./checkpoint/vae_0808'
+    # create checkpoint dir
+    save_dir = os.path.join(FLAGS.checkpoint_dir, FLAGS.test_name) #'./checkpoint/vae_0808'
     tl.files.exists_or_mkdir(save_dir)
-    # under current directory
-    samples_1 = FLAGS.sample_dir + "/" + FLAGS.test_number
-    # samples_1 = FLAGS.sample_dir + "/test2"
-    tl.files.exists_or_mkdir(samples_1) 
-    
+    # create samples dir
+    samples_dir = FLAGS.sample_dir + "/" + FLAGS.test_name
+    tl.files.exists_or_mkdir(samples_dir)
+    # create times dir and file
+    tl.files.exists_or_mkdir(FLAGS.times_dir)
+    timesFilename = FLAGS.times_dir + "/" + FLAGS.test_name + ".times"
+    with open(timesFilename, "w") as f:
+        f.write("");    # clean file
+
     # get the list of absolute paths of all images in dataset
     data_files = glob(os.path.join("./data", FLAGS.dataset, "*.jpg"))
     data_files = sorted(data_files)
@@ -197,7 +200,7 @@ def main(_):
                 p, p1, p2, p3, kl, sse, errE, _ = sess.run([p_loss,p1_loss,p2_loss,p3_loss,KL_loss,SSE_loss,VAE_loss,vae_optim], feed_dict={input_imgs: batch_images, lr_vae:vae_current_lr})
 
 
-                print("Epoch: [%2d/%2d] [%4d/%4d] time: %4.4f, vae_loss:%.8f, kl_loss:%.8f, sse_loss:%.8f, p1_loss:%.8f, p2_loss:%.8f, p3_loss:%.8f, p_loss:%.8f" \
+                print("Epoch: [%2d/%2d] [%4d/%4d] time: %4.4f, vae_loss:%8d, kl_loss:%8d, sse_loss:%8d, p1_loss:%8d, p2_loss:%8d, p3_loss:%8d, p_loss:%8d" \
                         % (epoch, FLAGS.epoch, idx, batch_idxs,
                             time.time() - start_time, errE, kl, sse, p1, p2, p3, p))
                 sys.stdout.flush()
@@ -231,52 +234,32 @@ def main(_):
                     # generate and visualize generated images
                     img1, img2 = sess.run([gen2.outputs, gen3.outputs], feed_dict={input_imgs: batch_images})
                     save_images(img1, [8, 8],
-                                './{}/train_{:02d}_{:04d}.png'.format(samples_1, epoch, idx))
+                                './{}/train_{:02d}_{:04d}.png'.format(samples_dir, epoch, idx))
 
                     # img2 = sess.run(gen3.outputs, feed_dict={input_imgs: batch_images})
                     save_images(img2, [8, 8],
-                                './{}/train_{:02d}_{:04d}_random.png'.format(samples_1, epoch, idx))
+                                './{}/train_{:02d}_{:04d}_random.png'.format(samples_dir, epoch, idx))
 
                     # save input image for comparison
-                    save_images(batch_images,[8, 8],'./{}/train_{:02d}_{:04d}_input.png'.format(samples_1,epoch,idx))
+                    save_images(batch_images,[8, 8],'./{}/train_{:02d}_{:04d}_input.png'.format(samples_dir,epoch,idx))
                     print("[Sample] sample generated!!!")
                     sys.stdout.flush()
+
+                    # write times to file
+                    with open(timesFilename, "a") as file:
+                        file.write("%8d,%8d,%8d,%8d,%8d,%8d,%8d,%8d\n" % (iter_counter, errE, kl, sse, p1, p2, p3, p))
 
                 # save checkpoint
                 if np.mod(iter_counter, FLAGS.save_step) == 0:
                     # save current network parameters
                     print("[*] Saving checkpoints...")
-                    net_e1_name = os.path.join(save_dir, 'net_e1.npz')
-                    net_e2_name = os.path.join(save_dir, 'net_e2.npz')
-                    net_g_name = os.path.join(save_dir, 'net_g.npz')
-                    # this version is for future re-check and visualization analysis
-                    net_e1_iter_name = os.path.join(save_dir, 'net_e1_%d.npz' % iter_counter)
-                    net_e2_iter_name = os.path.join(save_dir, 'net_e2_%d.npz' % iter_counter)
-                    net_g_iter_name = os.path.join(save_dir, 'net_g_%d.npz' % iter_counter)
-
-
-                    # params of two branches
-                    '''
-                    net_out_params = net_out1.all_params + net_out2.all_params
-                    print "Params = "
-                    print net_out_params
-                    print "-------------------"
-                     remove repeat params
-                    net_out_params = tl.layers.list_remove_repeat(net_out_params)
-                    print "Params remove repeat = "
-                    print net_out_params
-                    print "-------------------"
-                    tl.files.save_npz(net_out_params, name=net_e_name, sess=sess)
-                    tl.files.save_npz(net_out_params, name=net_e_iter_name, sess=sess)
-                    '''
+                    net_e1_name = os.path.join(save_dir, 'net_%d_e1.npz' % iter_counter)
+                    net_e2_name = os.path.join(save_dir, 'net_%d_e2.npz' % iter_counter)
+                    net_g_name = os.path.join(save_dir, 'net_%d_g.npz' % iter_counter)
 
                     tl.files.save_npz(net_out1.all_params, name=net_e1_name, sess=sess)
-                    tl.files.save_npz(net_out1.all_params, name=net_e1_iter_name, sess=sess)
                     tl.files.save_npz(net_out2.all_params, name=net_e2_name, sess=sess)
-                    tl.files.save_npz(net_out2.all_params, name=net_e2_iter_name, sess=sess)
-
                     tl.files.save_npz(gen0.all_params, name=net_g_name, sess=sess)
-                    tl.files.save_npz(gen0.all_params, name=net_g_iter_name, sess=sess)
 
                     print("[*] Saving checkpoints SUCCESS!")
 

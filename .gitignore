@@ -1,7 +1,9 @@
 .DS_Store
 checkpoint
 samples
+times
 data
 env
+env2
 vgg16_weights.npz
 *.pyc

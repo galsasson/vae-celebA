@@ -29,7 +29,7 @@ flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
 
 flags.DEFINE_string("model","", "Provide the name of the model to load [-]")
-flags.DEFINE_string("input", "", "Provide input image to reconstruct [-]")
+flags.DEFINE_string("input", "random", "Provide input file with z to generate [random]")
 flags.DEFINE_string("output", "image", "Output image name [image]")
 FLAGS = flags.FLAGS
 
@@ -43,46 +43,28 @@ def main(_):
         input_imgs = tf.placeholder(tf.float32,[FLAGS.batch_size, FLAGS.output_size, 
             FLAGS.output_size, FLAGS.c_dim], name='real_images')
 
-        # normal distribution for reparameterization trick
-        eps = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
-
-        # ----------------------encoder----------------------
-        net_out1, net_out2, z_mean, z_log_sigma_sq = encoder(input_imgs, is_train=False, reuse=False)
+        # normal distribution for generator
+        z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
 
         # ----------------------decoder----------------------
         # decode z 
-        # z = z_mean + z_sigma * eps
-        z = tf.add(z_mean, tf.multiply(tf.sqrt(tf.exp(z_log_sigma_sq)), eps)) # using reparameterization tricks
-        gen0, gen0_logits = generator(z, is_train=False, reuse=False) # reconstruction
+        gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
 
-    sess = tf.InteractiveSession()
-    tl.layers.initialize_global_variables(sess)
+        sess = tf.InteractiveSession()
+        tl.layers.initialize_global_variables(sess)
 
     # load checkpoint params
     print
     print 'Loading model: '+str(FLAGS.model)
-    load_params = tl.files.load_npz(name=FLAGS.model+'_e1.npz')
-    tl.files.assign_params(sess, load_params, net_out1)
-    load_params = tl.files.load_npz(name=FLAGS.model+'_e2.npz')
-    tl.files.assign_params(sess, load_params, net_out2)
     load_params = tl.files.load_npz(name=FLAGS.model+'_g.npz')
     tl.files.assign_params(sess, load_params, gen0)
 
-    # images to reconstruct
-    image_files = FLAGS.input.split(',')
-    while len(image_files)<FLAGS.batch_size:
-        image_files.append("black.jpg");
-
-    batch = [get_image(batch_file, FLAGS.image_size, is_crop=True, resize_w=FLAGS.output_size, is_grayscale = 0) for batch_file in image_files]
-    batch_images = np.array(batch).astype(np.float32)
-
-    save_images(batch_images,[8, 8],'./'+FLAGS.output+'_input.png')
-    print 'input image: ./'+FLAGS.output+'_input.png'
-
     # generate and visualize generated images
-    img1 = sess.run(gen0.outputs, feed_dict={input_imgs: batch_images})
-    save_images(img1, [8, 8],'./'+FLAGS.output+'_reconstruct.png')
-    print 'reconstructed image: ./'+FLAGS.output+'_reconstruct.png'
+    if FLAGS.input == "random":
+        print 'Generating random samples...'
+        img1 = sess.run(gen0.outputs, feed_dict={})
+        save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
+        print 'generated image: ./'+FLAGS.output+'.png'
 
 
 if __name__ == '__main__':

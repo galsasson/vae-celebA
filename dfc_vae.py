@@ -46,7 +46,7 @@ def encoder(input_imgs, is_train = True, reuse = False):
         # net_h2.outputs._shape = (b_size,4,4,256)
 
 
-        net_h35 = Conv2d(net_h3, ef_dim*16, (4, 4), (2, 2), act=None,
+        net_h35 = Conv2d(net_h3, ef_dim*8, (4, 4), (2, 2), act=None,
                 padding='SAME', W_init=w_init, name='en/h3.5/conv2d')
         net_h35 = BatchNormLayer(net_h35, act=lambda x: tl.act.lrelu(x, lrelu_alpha),
                 is_train=is_train, gamma_init=gamma_init, name='en/h3.5/batch_norm')
@@ -104,27 +104,27 @@ def generator(inputs, is_train = True, reuse = False):
                 gamma_init=gamma_init, name='g/h0/batch_norm')
 
         # upsampling
-        net_h1 = UpSampling2dLayer(net_h0, size=[8, 8], is_scale=False, method=1, 
+        net_h1 = UpSampling2dLayer(net_h0, size=[8,8], is_scale=False, method=1, 
                                     align_corners=False, name='g/h1/upsample2d')
-        net_h1 = Conv2d(net_h1, gf_dim*4, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h1/conv2d')
+        net_h1 = Conv2d(net_h1, gf_dim*8, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h1/conv2d')
         # net_h1 = DeConv2d(net_h0, gf_dim*4, (3, 3), out_size=(s4, s4), strides=(2, 2),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h1/decon2d')
         net_h1 = BatchNormLayer(net_h1, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h1/batch_norm')
         # net_h1.outputs._shape = (b_size,8,8,128)
 
-        net_h2 = UpSampling2dLayer(net_h1, size=[16, 16], is_scale=False, method=1, 
+        net_h2 = UpSampling2dLayer(net_h1, size=[2,2], is_scale=True, method=1, 
                                     align_corners=False, name='g/h2/upsample2d')
-        net_h2 = Conv2d(net_h2, gf_dim*2, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h2/conv2d')
+        net_h2 = Conv2d(net_h2, gf_dim*4, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h2/conv2d')
         # net_h2 = DeConv2d(net_h1, gf_dim*2, (3, 3), out_size=(s2, s2), strides=(2, 2),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h2/decon2d')
         net_h2 = BatchNormLayer(net_h2, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h2/batch_norm')
         # net_h2.outputs._shape = (b_size,16,16,64)
 
-        net_h3 = UpSampling2dLayer(net_h2, size=[32, 32], is_scale=False, method=1, 
+        net_h3 = UpSampling2dLayer(net_h2, size=[2,2], is_scale=True, method=1, 
                                     align_corners=False, name='g/h3/upsample2d')
-        net_h3 = Conv2d(net_h3, gf_dim, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h3/conv2d')
+        net_h3 = Conv2d(net_h3, gf_dim*2, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h3/conv2d')
         # net_h3 = DeConv2d(net_h2, gf_dim//2, (3, 3), out_size=(image_size, image_size), strides=(2, 2),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h3/decon2d')
         net_h3 = BatchNormLayer(net_h3, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
@@ -134,16 +134,16 @@ def generator(inputs, is_train = True, reuse = False):
         # no BN on last deconv
         # net_h4 = DeConv2d(net_h3, c_dim, (3, 3), out_size=(image_size, image_size), strides=(1, 1),
         #         padding='SAME', batch_size=batch_size, act=None, W_init=w_init, name='g/h4/decon2d')
-        net_h4 = UpSampling2dLayer(net_h3, size=[64, 64], is_scale=False, method=1, 
+        net_h4 = UpSampling2dLayer(net_h3, size=[2,2], is_scale=True, method=1, 
                                     align_corners=False, name='g/h4/upsample2d')
-        net_h4 = Conv2d(net_h4, c_dim, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h4/conv2d')
+        net_h4 = Conv2d(net_h4, gf_dim, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h4/conv2d')
         # net_h4.outputs._shape = (b_size,64,64,3)
         # net_h4 = Conv2d(net_h3, c_dim, (5,5),(1,1), padding='SAME', W_init=w_init, name='g/h4/conv2d')
         net_h4 = BatchNormLayer(net_h4, act=lambda x: tl.act.lrelu(x, lrelu_alpha), is_train=is_train,
                 gamma_init=gamma_init, name='g/h4/batch_norm')
 
 
-        net_h5 = UpSampling2dLayer(net_h4, size=[128, 128], is_scale=False, method=1, 
+        net_h5 = UpSampling2dLayer(net_h4, size=[2,2], is_scale=True, method=1, 
                                     align_corners=False, name='g/h5/upsample2d')
         net_h5 = Conv2d(net_h5, c_dim, (3, 3), (1, 1), padding='SAME', W_init=w_init, name='g/h5/conv2d')
         # net_h4.outputs._shape = (b_size,64,64,3)

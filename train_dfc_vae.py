@@ -24,7 +24,7 @@ Tensorlayer implementation of DFC-VAE
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 50, "Epoch to train [5]") 
-flags.DEFINE_float("learning_rate", 0.0005, "Learning rate of for adam [0.001]")
+flags.DEFINE_float("learning_rate", 0.001, "Learning rate of for adam [0.001]")
 flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
 flags.DEFINE_integer("train_size", np.inf, "The size of train images [np.inf]")
 flags.DEFINE_integer("batch_size", 32, "The number of batch images [64]")
@@ -33,8 +33,8 @@ flags.DEFINE_integer("output_size", 128, "The size of the output images to produ
 flags.DEFINE_integer("sample_size", 128, "The number of sample images [64]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
-flags.DEFINE_integer("sample_step", 200, "The interval of generating sample. [100]")
-flags.DEFINE_integer("save_step", 200, "The interval of saveing checkpoints. [200]")
+flags.DEFINE_integer("sample_step", 500, "The interval of generating sample. [500]")
+flags.DEFINE_integer("save_step", 500, "The interval of saveing checkpoints. [500]")
 flags.DEFINE_string("dataset", "img_align_celeba", "The name of dataset [img_align_celeba]")
 flags.DEFINE_string("test_name", "testname", "The number of experiment [testname]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")

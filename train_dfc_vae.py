@@ -49,6 +49,8 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
+    global blur_kernel_size
+    
     pp.pprint(FLAGS.__flags)
 
     # prepare for the file directory

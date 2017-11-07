@@ -177,6 +177,9 @@ def main(_):
     iter_counter = 0
 
     training_start_time = time.time()
+
+    blur_kernel_size = 133
+
     # use all images in dataset in every epoch
     for epoch in range(FLAGS.epoch):
         ## shuffle data
@@ -185,6 +188,9 @@ def main(_):
         minibatch = tl.iterate.minibatches(inputs=data_files, targets=data_files, batch_size=FLAGS.batch_size, shuffle=True)
         idx = 0
         batch_idxs = min(len(data_files), FLAGS.train_size) // FLAGS.batch_size
+        blur_kernel_size -= 4
+        if (blur_kernel_size < 0):
+            blur_kernel_size = 0
 
         while True:
             try:

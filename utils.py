@@ -1,6 +1,9 @@
 from random import shuffle
 import scipy.misc
 import numpy as np
+import cv2
+
+blur_kernel_size=0
 
 def center_crop(x, crop_h, crop_w=None, resize_w=64):
     # crop the images to [crop_h,crop_w,3] then resize to [resize_h,resize_w,3]
@@ -36,7 +39,10 @@ def imread(path, is_grayscale = False):
     if (is_grayscale):
         return scipy.misc.imread(path, flatten = True).astype(np.float) # [width,height] flatten RGB image to grayscale image
     else:
-        return scipy.misc.imread(path).astype(np.float) # [width,height,color_dim]
+        if blur_kernel_size == 0:
+            return scipy.misc.imread(path).astype(np.float) # [width,height,color_dim]
+        else:
+            return cv2.GaussianBlur(scipy.misc.imread(path),(blur_kernel_size,blur_kernel_size),0).astype(np.float)
 
 def imsave(images, size, path):
     return scipy.misc.imsave(path, merge(images, size))

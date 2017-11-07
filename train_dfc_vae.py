@@ -44,13 +44,11 @@ flags.DEFINE_boolean("is_train", False, "True for training, False for testing [F
 flags.DEFINE_boolean("is_crop", True, "True for training, False for testing [False]")
 
 flags.DEFINE_string("load_model","no", "Provide the name of the model to load [-]")
-flags.DEFINE_boolean("myrecon", False, "User custom images for samples [False]")
+flags.DEFINE_integer("init_blur", 0, "Initial training on blurred images. [0]")
 FLAGS = flags.FLAGS
 
 
 def main(_):
-    global blur_kernel_size
-    
     pp.pprint(FLAGS.__flags)
 
     # prepare for the file directory
@@ -180,7 +178,7 @@ def main(_):
 
     training_start_time = time.time()
 
-    blur_kernel_size = 133
+    blurVal = FLAGS.init_blur
 
     # use all images in dataset in every epoch
     for epoch in range(FLAGS.epoch):
@@ -190,14 +188,14 @@ def main(_):
         minibatch = tl.iterate.minibatches(inputs=data_files, targets=data_files, batch_size=FLAGS.batch_size, shuffle=True)
         idx = 0
         batch_idxs = min(len(data_files), FLAGS.train_size) // FLAGS.batch_size
-        blur_kernel_size -= 4
-        if (blur_kernel_size < 0):
-            blur_kernel_size = 0
+        blurVal -= 6
+        if blurVal < 0:
+            blurVal = 0
 
         while True:
             try:
                 batch_files,_ = minibatch.next()
-                batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0) \
+                batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0, blur=blurVal) \
                         for batch_file in batch_files]
                 batch_images = np.array(batch).astype(np.float32)
 
@@ -217,30 +215,6 @@ def main(_):
                 iter_counter += 1
                 # save samples
                 if np.mod(iter_counter, FLAGS.sample_step) == 0:
-
-                    if FLAGS.myrecon:
-                        batch_files[0] = "data/gal-small.jpg"
-                        batch_files[1] = "data/noa-small.jpg"
-                        batch_files[2] = "data/gal-small2.jpg"
-                        batch_files[3] = "data/noa-small2.jpg"
-                        batch_files[4] = "data/gal-small3.jpg"
-                        batch_files[5] = "data/gal-small4.jpg"
-                        batch_files[6] = "data/gal-small5.jpg"
-                        batch_files[7] = "data/gal-small6.jpg"
-                        batch_files[8] = "data/gal-small7.jpg"
-                        batch_files[9] = "data/gal-small8.jpg"
-                        batch_files[10] = "data/gal-small9.jpg"
-                        batch_files[11] = "data/gal-small10.jpg"
-                        batch_files[12] = "data/tal-small1.jpg"
-                        batch_files[13] = "data/tal-small2.jpg"
-                        batch_files[14] = "data/tal-small3.jpg"
-                        batch_files[15] = "data/tal-small4.jpg"
-                        batch_files[16] = "data/gal-small11.jpg"
-                        batch_files[17] = "data/gal-small12.jpg"
-                        batch_files[18] = "data/gal-small13.jpg"
-                        batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0) for batch_file in batch_files]
-                        batch_images = np.array(batch).astype(np.float32)
-
 
                     # generate and visualize generated images
                     img1, img2 = sess.run([gen2.outputs, gen3.outputs], feed_dict={input_imgs: batch_images})

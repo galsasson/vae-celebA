@@ -3,8 +3,6 @@ import scipy.misc
 import numpy as np
 import cv2
 
-blur_kernel_size=0
-
 def center_crop(x, crop_h, crop_w=None, resize_w=64):
     # crop the images to [crop_h,crop_w,3] then resize to [resize_h,resize_w,3]
     if crop_w is None:
@@ -35,20 +33,20 @@ def transform(image, npx=64, is_crop=True, resize_w=64):
 def inverse_transform(images):
     return (images+1.)/2. # change image pixel value(outputs from tanh in range [-1,1]) back to [0,1]
 
-def imread(path, is_grayscale = False):
+def imread(path, is_grayscale = False, blur=0):
     if (is_grayscale):
         return scipy.misc.imread(path, flatten = True).astype(np.float) # [width,height] flatten RGB image to grayscale image
     else:
-        if blur_kernel_size == 0:
+        if blur == 0:
             return scipy.misc.imread(path).astype(np.float) # [width,height,color_dim]
         else:
-            return cv2.GaussianBlur(scipy.misc.imread(path),(blur_kernel_size,blur_kernel_size),0).astype(np.float)
+            return cv2.GaussianBlur(scipy.misc.imread(path),(blur,blur),0).astype(np.float)
 
 def imsave(images, size, path):
     return scipy.misc.imsave(path, merge(images, size))
 
-def get_image(image_path, image_size, is_crop=True, resize_w=64, is_grayscale = False):
-    return transform(imread(image_path, is_grayscale), image_size, is_crop, resize_w)
+def get_image(image_path, image_size, is_crop=True, resize_w=64, is_grayscale = False, blur=0):
+    return transform(imread(image_path, is_grayscale, blur), image_size, is_crop, resize_w)
 
 def save_images(images, size, image_path):
     # size indicates how to arrange the images to form a big summary image

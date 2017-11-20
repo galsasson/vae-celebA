@@ -23,16 +23,16 @@ Tensorlayer implementation of DFC-VAE
 '''
 
 flags = tf.app.flags
-flags.DEFINE_integer("epoch", 50, "Epoch to train [5]") 
+flags.DEFINE_integer("epoch", 50, "Epoch to train [50]") 
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate of for adam [0.001]")
 flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
 flags.DEFINE_integer("train_size", np.inf, "The size of train images [np.inf]")
-flags.DEFINE_integer("batch_size", 32, "The number of batch images [64]")
-flags.DEFINE_integer("image_size", 148, "The size of image to use (will be center cropped) [108]")
-flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [64]")
-flags.DEFINE_integer("sample_size", 128, "The number of sample images [64]")
+flags.DEFINE_integer("batch_size", 32, "The number of batch images [32]")
+flags.DEFINE_integer("image_size", 148, "The size of image to use (will be center cropped) [148]")
+flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [128]")
+flags.DEFINE_integer("sample_size", 128, "The number of sample images [128]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
-flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
+flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [100]")
 flags.DEFINE_integer("sample_step", 500, "The interval of generating sample. [500]")
 flags.DEFINE_integer("save_step", 500, "The interval of saveing checkpoints. [500]")
 flags.DEFINE_string("dataset", "img_align_celeba", "The name of dataset [img_align_celeba]")
@@ -40,10 +40,8 @@ flags.DEFINE_string("test_name", "testname", "The number of experiment [testname
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
 flags.DEFINE_string("times_dir", "times", "Directory name to save times [times]")
-flags.DEFINE_boolean("is_train", False, "True for training, False for testing [False]")
-flags.DEFINE_boolean("is_crop", True, "True for training, False for testing [False]")
-
-flags.DEFINE_string("load_model","no", "Provide the name of the model to load [-]")
+flags.DEFINE_boolean("random_crop", False, "True to perform random cropping (non centered) [False]")
+flags.DEFINE_string("load_model","no", "Provide the name of the model to load [no]")
 flags.DEFINE_integer("init_blur", 0, "Initial training on blurred images. [0]")
 FLAGS = flags.FLAGS
 
@@ -195,7 +193,7 @@ def main(_):
         while True:
             try:
                 batch_files,_ = minibatch.next()
-                batch = [get_image(batch_file, FLAGS.image_size, is_crop=FLAGS.is_crop, resize_w=FLAGS.output_size, is_grayscale = 0, blur=blurVal) \
+                batch = [get_image(batch_file, FLAGS.image_size, is_crop=True, resize_w=FLAGS.output_size, is_grayscale = 0, blur=blurVal, is_centered=not FLAGS.random_crop) \
                         for batch_file in batch_files]
                 batch_images = np.array(batch).astype(np.float32)
 

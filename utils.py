@@ -13,6 +13,15 @@ def center_crop(x, crop_h, crop_w=None, resize_w=64):
     return scipy.misc.imresize(x[j:j+crop_h, i:i+crop_w],
                                [resize_w, resize_w]) 
 
+def random_crop(x, crop_h, crop_w=None, resize_w=64):
+    if crop_w is None:
+        crop_w = crop_h
+    h,w = x.shape[:2]
+    j = int(np.random.random_sample()*(h-crop_h))
+    i = int(np.random.random_sample()*(w-crop_w))
+    return scipy.misc.imresize(x[j:j+crop_h, i:i+crop_w],
+                               [resize_w, resize_w])    
+
 def merge(images, size):
     # merge all output images(of sample size:8*8 output images of size 64*64) into one big image
     h, w = images.shape[1], images.shape[2]
@@ -23,9 +32,12 @@ def merge(images, size):
         img[j*h:j*h+h, i*w:i*w+w, :] = image
     return img
 
-def transform(image, npx=64, is_crop=True, resize_w=64):
+def transform(image, npx=64, is_crop=True, resize_w=64, is_centered=True):
     if is_crop:
-        cropped_image = center_crop(image, npx, resize_w=resize_w)
+        if is_centered:
+            cropped_image = center_crop(image, npx, resize_w=resize_w)
+        else:
+            cropped_image = random_crop(image, npx, resize_w=resize_w)
     else:
         cropped_image = image
     return np.array(cropped_image)/127.5 - 1.  # change pixel value range from [0,255] to [-1,1] to feed into CNN
@@ -45,8 +57,8 @@ def imread(path, is_grayscale = False, blur=0):
 def imsave(images, size, path):
     return scipy.misc.imsave(path, merge(images, size))
 
-def get_image(image_path, image_size, is_crop=True, resize_w=64, is_grayscale = False, blur=0):
-    return transform(imread(image_path, is_grayscale, blur), image_size, is_crop, resize_w)
+def get_image(image_path, image_size, is_crop=True, resize_w=64, is_grayscale = False, blur=0, is_centered=True):
+    return transform(imread(image_path, is_grayscale, blur), image_size, is_crop, resize_w, is_centered)
 
 def save_images(images, size, image_path):
     # size indicates how to arrange the images to form a big summary image

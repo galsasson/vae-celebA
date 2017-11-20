@@ -44,7 +44,9 @@ def main(_):
             FLAGS.output_size, FLAGS.c_dim], name='real_images')
 
         # normal distribution for reparameterization trick
-        eps = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
+        #eps = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
+        eps = np.zeros([FLAGS.batch_size, FLAGS.z_dim])
+        #tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
 
         # ----------------------encoder----------------------
         net_out1, net_out2, z_mean, z_log_sigma_sq = encoder(input_imgs, is_train=False, reuse=False)
@@ -78,8 +80,8 @@ def main(_):
 
     # generate and visualize generated images
     tmpz = sess.run(z, feed_dict={input_imgs: batch_images})
-    with open(FLAGS.output+'.txt', 'w') as f:
-        f.write(tmpz)
+    with open(FLAGS.output+'.txt', 'wb') as f:
+        np.save(f, tmpz)
     print 'output file: ./'+FLAGS.output+'.txt'
 #    save_images(img1, [8, 8],'./'+FLAGS.output+'_z.png')
 #    print 'reconstructed image: ./'+FLAGS.output+'_reconstruct.png'

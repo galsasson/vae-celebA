@@ -64,7 +64,7 @@ def main(_):
             # save image
             save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
             print 'Generated image: ./'+FLAGS.output+'.png'
-            
+
         else:
             print 'Generating from file: '+FLAGS.input
 
@@ -75,6 +75,7 @@ def main(_):
             # ----------------------decoder----------------------
             gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
 
+            # create session
             sess = tf.InteractiveSession()
             tl.layers.initialize_global_variables(sess)
 

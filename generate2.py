@@ -41,18 +41,23 @@ def main(_):
     print '\nGenerating from file: '+FLAGS.input
 
     # read z from file
-    z = np.load(FLAGS.input)
+    #z = np.load(FLAGS.input)
+    #z = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0, name='z_input')
+    z = np.random.normal(0.0, 1.0, [FLAGS.batch_size, FLAGS.z_dim])
+
 
     # ----------------------decoder----------------------
     gen0 = tf.train.import_meta_graph(FLAGS.model) # reconstruction
+    print gen0
     g = tf.get_default_graph()
     print g
-    outputs = g.get_tensor_by_name("generator/g/h5/conv2d/Identity:0")
+    outputs = g.get_tensor_by_name("generator/Tanh:0")
+    inputs = g.get_tensor_by_name("z_input:0")
     print outputs
 
     # create session
     sess = tf.InteractiveSession()
-    #tl.layers.initialize_global_variables(sess)
+    tl.layers.initialize_global_variables(sess)
 
     # load checkpoint params
     #print
@@ -61,7 +66,7 @@ def main(_):
     #tl.files.assign_params(sess, load_params, gen0)
 
     # run session
-    img1 = sess.run(outputs, feed_dict={'z_input:0':z})
+    img1 = sess.run(outputs, feed_dict={})
 
     # save image
     save_images(img1, [8, 8],'./'+FLAGS.output+'.png')

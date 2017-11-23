@@ -37,7 +37,7 @@ def main(_):
 
     # normal distribution for generator
     print '\nCreative generator model...'
-    z_p = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim],name='z_input')
+    z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0, name='z_input')
     
     # ----------------------decoder----------------------
     gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
@@ -51,9 +51,18 @@ def main(_):
     load_params = tl.files.load_npz(name=FLAGS.input)
     tl.files.assign_params(sess, load_params, gen0)
 
+
+    img1 = sess.run(gen0.outputs, feed_dict={})
+
+
     freezedFile = os.path.splitext(FLAGS.input)[0]+'_frz.meta'
     print '\n Creating freezed graph: '+freezedFile
-    tf.train.export_meta_graph(freezedFile)
+    tf.train.export_meta_graph(freezedFile, as_text=True)
+
+    # save image
+    save_images(img1, [8, 8],'./debug.png')
+    print 'Generated image: ./debug.png'
+
 
 if __name__ == '__main__':
     tf.app.run()

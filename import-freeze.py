@@ -28,41 +28,37 @@ flags.DEFINE_integer("sample_size", 128, "The number of sample images [64]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
 
-flags.DEFINE_string("input","", "Provide the name of the model to freeze [-]")
+flags.DEFINE_string("model","", "Provide the name of the model to load [-]")
+flags.DEFINE_string("input", "random", "Provide input file with z to generate [random]")
+flags.DEFINE_string("output", "image", "Output image name [image]")
 FLAGS = flags.FLAGS
 
 
 def main(_):
     pp.pprint(FLAGS.__flags)
 
-    # normal distribution for generator
-    print '\nCreative generator model...'
-    z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0, name='z_input')
-    
-    # ----------------------decoder----------------------
-    gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
-    
+    # generate and visualize generated images
+    print '\nGenerating from file: '+FLAGS.input
+
+    # read z from file
+    z = np.load(FLAGS.input)
+
+    # read freezed graph
+    with tf.gfile.GFile(FLAGS.model, "rb") as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+        
     # create session
-    sess = tf.InteractiveSession()
+    tf.import_graph_def(graph_def)
+    sess = tf.Session()
     tl.layers.initialize_global_variables(sess)
-    
-    # load checkpoint params
-    print '\nLoading model: '+str(FLAGS.input)
-    load_params = tl.files.load_npz(name=FLAGS.input)
-    tl.files.assign_params(sess, load_params, gen0)
 
-
-    img1 = sess.run(gen0.outputs, feed_dict={})
-
-
-    freezedFile = os.path.splitext(FLAGS.input)[0]+'_frz.meta'
-    print '\n Creating freezed graph: '+freezedFile
-    tf.train.export_meta_graph(freezedFile, as_text=True)
+    # run computation
+    img1 = sess.run('import/generator/Tanh:0', feed_dict={'import/z_input:0':z})
 
     # save image
-    save_images(img1, [8, 8],'./debug.png')
-    print 'Generated image: ./debug.png'
-
+    save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
+    print 'Generated image: ./'+FLAGS.output+'.png'
 
 if __name__ == '__main__':
     tf.app.run()

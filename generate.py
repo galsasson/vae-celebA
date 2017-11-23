@@ -37,60 +37,59 @@ FLAGS = flags.FLAGS
 def main(_):
     pp.pprint(FLAGS.__flags)
 
-    with tf.device("/gpu:0"):
-        # generate and visualize generated images
-        if FLAGS.input == "random":
-            print 'Generating random samples...'
-            
-            # normal distribution for generator
-            z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
-            
-            # ----------------------decoder----------------------
-            gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
-            
-            # create session
-            sess = tf.InteractiveSession()
-            tl.layers.initialize_global_variables(sess)
-            
-            # load checkpoint params
-            print
-            print 'Loading model: '+str(FLAGS.model)
-            load_params = tl.files.load_npz(name=FLAGS.model+'_g.npz')
-            tl.files.assign_params(sess, load_params, gen0)
+    # generate and visualize generated images
+    if FLAGS.input == "random":
+        print 'Generating random samples...'
+        
+        # normal distribution for generator
+        z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)        
+        
+        # ----------------------decoder----------------------
+        gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
+        
+        # create session
+        sess = tf.InteractiveSession()
+        tl.layers.initialize_global_variables(sess)
+        
+        # load checkpoint params
+        print
+        print 'Loading model: '+str(FLAGS.model)
+        load_params = tl.files.load_npz(name=FLAGS.model+'_g.npz')
+        tl.files.assign_params(sess, load_params, gen0)
 
-            # run session
-            img1 = sess.run(gen0.outputs, feed_dict={})
+        # run session
+        img1 = sess.run(gen0.outputs, feed_dict={})
 
-            # save image
-            save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
-            print 'Generated image: ./'+FLAGS.output+'.png'
+        # save image
+        save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
+        print 'Generated image: ./'+FLAGS.output+'.png'
 
-        else:
-            print 'Generating from file: '+FLAGS.input
+    else:
+        print 'Generating from file: '+FLAGS.input
 
-            # read z from file
-            z_p = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim],name='z_input')
-            z = np.load(FLAGS.input)
+        # read z from file
+        z_p = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim],name='z_input')
+        z = np.load(FLAGS.input)
 
-            # ----------------------decoder----------------------
-            gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
+        # ----------------------decoder----------------------
+        gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
 
-            # create session
-            sess = tf.InteractiveSession()
-            tl.layers.initialize_global_variables(sess)
+        # create session
+        sess = tf.InteractiveSession()
+        tl.layers.initialize_global_variables(sess)
 
-            # load checkpoint params
-            print
-            print 'Loading model: '+str(FLAGS.model)
-            load_params = tl.files.load_npz(name=FLAGS.model+'_g.npz')
-            tl.files.assign_params(sess, load_params, gen0)
+        # load checkpoint params
+        print
+        print 'Loading model: '+str(FLAGS.model)
+        load_params = tl.files.load_npz(name=FLAGS.model+'_g.npz')
+        tl.files.assign_params(sess, load_params, gen0)
 
-            # run session
-            img1 = sess.run(gen0.outputs, feed_dict={z_p:z})
+        # run session
+        img1 = sess.run(gen0.outputs, feed_dict={z_p:z})
 
-            # save image
-            save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
-            print 'Generated image: ./'+FLAGS.output+'.png'
+        # save image
+        save_images(img1, [8, 8],'./'+FLAGS.output+'.png')
+        print 'Generated image: ./'+FLAGS.output+'.png'
 
 if __name__ == '__main__':
     tf.app.run()

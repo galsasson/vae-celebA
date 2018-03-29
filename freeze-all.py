@@ -35,13 +35,20 @@ FLAGS = flags.FLAGS
 def main(_):
     pp.pprint(FLAGS.__flags)
 
-    # normal distribution for generator
-    print '\nCreative generator model...'
-    z_p = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim],name='z_input')
-    
+    # input image
+    input_imgs = tf.placeholder(tf.float32,[FLAGS.batch_size, FLAGS.output_size, 
+            FLAGS.output_size, FLAGS.c_dim], name='input_image')
+
+    # normal distribution for reparameterization trick
+    eps = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
+    # ----------------------encoder----------------------
+    net_out1, net_out2, z_mean, z_log_sigma_sq = encoder(input_imgs, is_train=False, reuse=False)
+    z = tf.add(z_mean, tf.multiply(tf.sqrt(tf.exp(z_log_sigma_sq)), eps)) # using reparameterization tricks
+    read_z = tf.identity(z, name='read_z')
+
     # ----------------------decoder----------------------
-    gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction
-    tf.identity(gen0.outputs, name='output_image')
+    gen0, gen0_logits = generator(z, is_train=False, reuse=False) # reconstruction
+    read_gen0 = tf.identity(gen0.outputs, name='output_image')
     
     # create session
     sess = tf.InteractiveSession()
@@ -49,13 +56,17 @@ def main(_):
     
     # load checkpoint params
     print '\nLoading model: '+str(FLAGS.input)
-    load_params = tl.files.load_npz(name=FLAGS.input)
+    load_params = tl.files.load_npz(name=FLAGS.input+'_e1.npz')
+    tl.files.assign_params(sess, load_params, net_out1)
+    load_params = tl.files.load_npz(name=FLAGS.input+'_e2.npz')
+    tl.files.assign_params(sess, load_params, net_out2)
+    load_params = tl.files.load_npz(name=FLAGS.input+'_g.npz')
     tl.files.assign_params(sess, load_params, gen0)
 
     # freeze and save graph
     freezedFile = os.path.splitext(FLAGS.input)[0]+'_frz.pb'
     print 'Creating freezed graph: '+freezedFile
-    graph_frz = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, ['z_input', 'output_image'])
+    graph_frz = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, ['input_image','read_z','output_image'])
     tf.train.write_graph(graph_frz, '.', freezedFile, as_text=False)
 
 

@@ -21,10 +21,10 @@ Tensorlayer implementation of DFC-VAE
 '''
 
 flags = tf.app.flags
-flags.DEFINE_integer("batch_size", 32, "The number of batch images [64]")
-flags.DEFINE_integer("image_size", 148, "The size of image to use (will be center cropped) [108]")
-flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [64]")
-flags.DEFINE_integer("sample_size", 128, "The number of sample images [64]")
+flags.DEFINE_integer("batch_size", 32, "The number of batch images [32]")
+flags.DEFINE_integer("image_size", 128, "The size of image to use (will be center cropped) [128]")
+flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [128]")
+flags.DEFINE_integer("sample_size", 128, "The number of sample images [128]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [100]")
 
@@ -41,7 +41,14 @@ def main(_):
     print '\nGenerating from file: '+FLAGS.input
 
     # read z from file
-    z = np.load(FLAGS.input)
+    if FLAGS.input == "random":
+        print 'Generating random samples...'
+        
+        # normal distribution for generator
+        #z_p = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)        
+        z = np.random.normal(0.0, 1.0, [FLAGS.batch_size, FLAGS.z_dim]);
+    else:
+        z = np.load(FLAGS.input)
 
     # read freezed graph
     with tf.gfile.GFile(FLAGS.model, "rb") as f:

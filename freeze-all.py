@@ -69,6 +69,11 @@ def main(_):
     graph_frz = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, ['input_image','read_z','output_image'])
     tf.train.write_graph(graph_frz, '.', freezedFile, as_text=False)
 
+    # save as ckpt for the web
+    saver = tf.train.Saver()
+    checkpoint_file = os.path.join(os.path.splitext(FLAGS.input)[0]+'_web', 'model.ckpt')
+    saver.save(sess, checkpoint_file)
+
 
     # create and save sample image
     #img1 = sess.run(gen0.outputs, feed_dict={})

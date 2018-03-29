@@ -26,7 +26,7 @@ flags.DEFINE_integer("image_size", 148, "The size of image to use (will be cente
 flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [64]")
 flags.DEFINE_integer("sample_size", 128, "The number of sample images [64]")
 flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
-flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [2048]")
+flags.DEFINE_integer("z_dim", 100, "Dimension of latent representation vector from. [100]")
 
 flags.DEFINE_string("model","", "Provide the name of the model to load [-]")
 flags.DEFINE_string("input", "random", "Provide input file with z to generate [random]")

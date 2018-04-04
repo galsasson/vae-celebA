@@ -39,15 +39,12 @@ def main(_):
     input_imgs = tf.placeholder(tf.float32,[FLAGS.batch_size, FLAGS.output_size, 
             FLAGS.output_size, FLAGS.c_dim], name='input_image')
 
-    # normal distribution for reparameterization trick
-    eps = tf.random_normal(shape=(FLAGS.batch_size, FLAGS.z_dim), mean=0.0, stddev=1.0)
     # ----------------------encoder----------------------
     net_out1, net_out2, z_mean, z_log_sigma_sq = encoder(input_imgs, is_train=False, reuse=False)
-    z = tf.add(z_mean, tf.multiply(tf.sqrt(tf.exp(z_log_sigma_sq)), eps)) # using reparameterization tricks
-    read_z = tf.identity(z, name='read_z')
+    read_z = tf.identity(z_mean, name='read_z')
 
     # ----------------------decoder----------------------
-    gen0, gen0_logits = generator(z, is_train=False, reuse=False) # reconstruction
+    gen0, gen0_logits = generator(z_mean, is_train=False, reuse=False) # reconstruction
     read_gen0 = tf.identity(gen0.outputs, name='output_image')
     
     # create session

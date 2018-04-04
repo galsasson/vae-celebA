@@ -217,14 +217,14 @@ def main(_):
                     # generate and visualize generated images
                     img1, img2 = sess.run([gen2.outputs, gen3.outputs], feed_dict={input_imgs: batch_images})
                     save_images(img1, [8, 8],
-                                './{}/train_{:02d}_{:04d}.png'.format(samples_dir, epoch, idx))
+                                './{}/train_{:d}.png'.format(samples_dir, iter_counter))
 
                     # img2 = sess.run(gen3.outputs, feed_dict={input_imgs: batch_images})
                     save_images(img2, [8, 8],
-                                './{}/train_{:02d}_{:04d}_random.png'.format(samples_dir, epoch, idx))
+                                './{}/train_{:d}_random.png'.format(samples_dir, iter_counter))
 
                     # save input image for comparison
-                    save_images(batch_images,[8, 8],'./{}/train_{:02d}_{:04d}_input.png'.format(samples_dir,epoch,idx))
+                    save_images(batch_images,[8, 8],'./{}/train_{:d}_input.png'.format(samples_dir, iter_counter))
                     print("[Sample] sample generated!!!")
                     sys.stdout.flush()
 

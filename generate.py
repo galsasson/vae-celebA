@@ -70,6 +70,7 @@ def main(_):
         # read z from file
         z_p = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim],name='z_input')
         z = np.load(FLAGS.input)
+        print z
 
         # ----------------------decoder----------------------
         gen0, gen0_logits = generator(z_p, is_train=False, reuse=False) # reconstruction

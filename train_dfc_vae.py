@@ -26,7 +26,7 @@ flags = tf.app.flags
 flags.DEFINE_integer("epoch", 50, "Epoch to train [50]") 
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate of for adam [0.001]")
 flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
-flags.DEFINE_integer("train_size", np.inf, "The size of train images [np.inf]")
+flags.DEFINE_float("train_size", np.inf, "The size of train images [np.inf]")
 flags.DEFINE_integer("batch_size", 32, "The number of batch images [32]")
 flags.DEFINE_integer("image_size", 148, "The size of image to use (will be center cropped) [148]")
 flags.DEFINE_integer("output_size", 128, "The size of the output images to produce [128]")
